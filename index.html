@@ -37,7 +37,7 @@
       max-width: 1000px;
       margin-left: auto;
       margin-right: auto;
-      overflow-x: hidden; /* 固定X軸 */
+      overflow-x: hidden;
     }
 
     .column {
@@ -69,6 +69,7 @@
     <button onclick="recordTime()">記錄現在時間</button>
     <button onclick="recordEmpty()">沒記錄到（留空）</button>
     <button onclick="downloadCSV()">下載CSV（一左一右）</button>
+    <button onclick="clearAll()">清除所有記錄</button>
   </div>
 
   <div id="log-container">
@@ -99,6 +100,7 @@
       records.push(record);
       logRecord(record);
       count++;
+      saveRecords();
     }
 
     function recordEmpty() {
@@ -106,6 +108,7 @@
       records.push(record);
       logRecord(record);
       count++;
+      saveRecords();
     }
 
     function logRecord(record) {
@@ -117,8 +120,10 @@
       if (record.number % 2 === 0) {
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
+        checkbox.checked = record.measured === true;
         checkbox.onchange = () => {
           record.measured = checkbox.checked;
+          saveRecords();
         };
         const label = document.createElement("label");
         label.className = "checkbox-label";
@@ -132,6 +137,11 @@
     }
 
     function downloadCSV() {
+      if (records.length === 0) {
+        alert("目前尚未有任何記錄");
+        return;
+      }
+
       const header = ["編號", "時間", "編號", "時間", "是否量測"];
       const rows = [];
 
@@ -150,6 +160,43 @@
       const blob = new Blob([utf8Bom, csv], { type: "text/csv;charset=utf-8;" });
       saveAs(blob, "time_records.csv");
     }
+
+    function saveRecords() {
+      localStorage.setItem("timeRecords", JSON.stringify(records));
+      localStorage.setItem("recordCount", count);
+    }
+
+    function loadRecords() {
+      const saved = localStorage.getItem("timeRecords");
+      const savedCount = localStorage.getItem("recordCount");
+
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        parsed.forEach(record => {
+          records.push(record);
+          logRecord(record);
+        });
+      }
+
+      if (savedCount) {
+        count = parseInt(savedCount);
+      }
+    }
+
+    function clearAll() {
+      if (confirm("確定要清除所有記錄嗎？此操作無法還原。")) {
+        localStorage.removeItem("timeRecords");
+        localStorage.removeItem("recordCount");
+        records.length = 0;
+        count = 1;
+        document.getElementById("log-left").innerHTML = "";
+        document.getElementById("log-right").innerHTML = "";
+      }
+    }
+
+    window.onload = () => {
+      loadRecords();
+    };
   </script>
 </body>
 </html>
