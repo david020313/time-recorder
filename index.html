@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>時間記錄器</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 30px;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin: 10px;
+      cursor: pointer;
+    }
+    #log {
+      margin-top: 30px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>時間記錄器</h1>
+  <button onclick="recordTime()">記錄現在時間</button>
+  <button onclick="recordEmpty()">沒記錄到（留空）</button>
+  <button onclick="downloadCSV()">下載CSV（一左一右）</button>
+
+  <div id="log"></div>
+
+  <script>
+    const records = []; // 每筆記錄存 [編號, 時間]
+    let count = 1;
+
+    function getCurrentTime24hr() {
+      const now = new Date();
+      return now.toLocaleString("zh-TW", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",   // 保留秒數
+        hour12: false        // 24 小時制
+      });
+    }
+
+    function recordTime() {
+      const now = getCurrentTime24hr();
+      records.push([count, ` ${now}`]);  // 加一個空格前面
+      log(`✔️ 第 ${count} 筆：${now}`);
+      count++;
+    }
+
+    function recordEmpty() {
+      records.push([count, ""]);
+      log(`⚠️ 第 ${count} 筆：（空白記錄）`);
+      count++;
+    }
+
+    function log(text) {
+      const div = document.getElementById("log");
+      div.innerHTML += text + "<br>";
+    }
+
+    function downloadCSV() {
+      const header = ["編號", "時間", "編號", "時間"];
+      const rows = [];
+
+      for (let i = 0; i < records.length; i += 2) {
+        const left = records[i];
+        const right = records[i + 1] || ["", ""];
+        rows.push([left[0], left[1], right[0], right[1]]);
+      }
+
+      const csv = Papa.unparse({ fields: header, data: rows });
+      const utf8Bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+      const blob = new Blob([utf8Bom, csv], { type: "text/csv;charset=utf-8;" });
+      saveAs(blob, "time_records.csv");
+    }
+  </script>
+</body>
+</html>
