@@ -11,6 +11,14 @@
       text-align: center;
       padding: 30px;
     }
+    #buttonBar {
+      position: sticky;
+      top: 0;
+      background-color: white;
+      padding: 10px;
+      z-index: 100;
+      border-bottom: 1px solid #ccc;
+    }
     button {
       font-size: 18px;
       padding: 10px 20px;
@@ -20,19 +28,32 @@
     #log {
       margin-top: 30px;
       font-size: 16px;
+      text-align: left;
+      display: inline-block;
+    }
+    .record-line {
+      margin-bottom: 10px;
+    }
+    .checkbox-label {
+      margin-left: 10px;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <h1>時間記錄器</h1>
-  <button onclick="recordTime()">記錄現在時間</button>
-  <button onclick="recordEmpty()">沒記錄到（留空）</button>
-  <button onclick="downloadCSV()">下載CSV（一左一右）</button>
+  
+  <!-- 固定按鈕區塊 -->
+  <div id="buttonBar">
+    <button onclick="recordTime()">記錄現在時間</button>
+    <button onclick="recordEmpty()">沒記錄到（留空）</button>
+    <button onclick="downloadCSV()">下載CSV（一左一右）</button>
+  </div>
 
   <div id="log"></div>
 
   <script>
-    const records = []; // 每筆記錄存 [編號, 時間]
+    const records = []; // 每筆記錄為 {number, time, measured}
     let count = 1;
 
     function getCurrentTime24hr() {
@@ -43,37 +64,62 @@
         day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
-        second: "2-digit",   // 保留秒數
-        hour12: false        // 24 小時制
+        second: "2-digit",
+        hour12: false
       });
     }
 
     function recordTime() {
       const now = getCurrentTime24hr();
-      records.push([count, ` ${now}`]);  // 加一個空格前面
-      log(`✔️ 第 ${count} 筆：${now}`);
+      const record = { number: count, time: ` ${now}`, measured: null };
+      records.push(record);
+      logRecord(record);
       count++;
     }
 
     function recordEmpty() {
-      records.push([count, ""]);
-      log(`⚠️ 第 ${count} 筆：（空白記錄）`);
+      const record = { number: count, time: "", measured: null };
+      records.push(record);
+      logRecord(record);
       count++;
     }
 
-    function log(text) {
+    function logRecord(record) {
       const div = document.getElementById("log");
-      div.innerHTML += text + "<br>";
+      const line = document.createElement("div");
+      line.className = "record-line";
+      const text = document.createTextNode(`${record.time ? "✔️" : "⚠️"} 第 ${record.number} 筆：${record.time || "（空白記錄）"}`);
+      line.appendChild(text);
+
+      // 如果是偶數筆，加勾選框
+      if (record.number % 2 === 0) {
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.onchange = () => {
+          record.measured = checkbox.checked;
+        };
+        const label = document.createElement("label");
+        label.className = "checkbox-label";
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(" 是否量測"));
+        line.appendChild(label);
+      }
+
+      div.appendChild(line);
     }
 
     function downloadCSV() {
-      const header = ["編號", "時間", "編號", "時間"];
+      const header = ["編號", "時間", "編號", "時間", "是否量測"];
       const rows = [];
 
       for (let i = 0; i < records.length; i += 2) {
-        const left = records[i];
-        const right = records[i + 1] || ["", ""];
-        rows.push([left[0], left[1], right[0], right[1]]);
+        const left = records[i] || {};
+        const right = records[i + 1] || {};
+        rows.push([
+          left.number || "", left.time || "",
+          right.number || "", right.time || "",
+          right.hasOwnProperty("measured") ? (right.measured ? "是" : "否") : ""
+        ]);
       }
 
       const csv = Papa.unparse({ fields: header, data: rows });
