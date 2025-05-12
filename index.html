@@ -8,9 +8,11 @@
   <style>
     body {
       font-family: sans-serif;
-      text-align: center;
       padding: 30px;
+      margin: 0;
+      text-align: center;
     }
+
     #buttonBar {
       position: sticky;
       top: 0;
@@ -19,21 +21,41 @@
       z-index: 100;
       border-bottom: 1px solid #ccc;
     }
+
     button {
       font-size: 18px;
       padding: 10px 20px;
       margin: 10px;
       cursor: pointer;
     }
-    #log {
+
+    #log-container {
+      display: flex;
+      justify-content: center;
       margin-top: 30px;
-      font-size: 16px;
+      gap: 40px;
+      max-width: 1000px;
+      margin-left: auto;
+      margin-right: auto;
+      overflow-x: hidden; /* 固定X軸 */
+    }
+
+    .column {
+      width: 45%;
       text-align: left;
-      display: inline-block;
+      overflow-y: auto;
+      max-height: 600px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 15px;
+      box-sizing: border-box;
+      background-color: #f9f9f9;
     }
+
     .record-line {
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
+
     .checkbox-label {
       margin-left: 10px;
       font-size: 14px;
@@ -42,15 +64,17 @@
 </head>
 <body>
   <h1>時間記錄器</h1>
-  
-  <!-- 固定按鈕區塊 -->
+
   <div id="buttonBar">
     <button onclick="recordTime()">記錄現在時間</button>
     <button onclick="recordEmpty()">沒記錄到（留空）</button>
     <button onclick="downloadCSV()">下載CSV（一左一右）</button>
   </div>
 
-  <div id="log"></div>
+  <div id="log-container">
+    <div id="log-left" class="column"></div>
+    <div id="log-right" class="column"></div>
+  </div>
 
   <script>
     const records = []; // 每筆記錄為 {number, time, measured}
@@ -85,13 +109,11 @@
     }
 
     function logRecord(record) {
-      const div = document.getElementById("log");
       const line = document.createElement("div");
       line.className = "record-line";
       const text = document.createTextNode(`${record.time ? "✔️" : "⚠️"} 第 ${record.number} 筆：${record.time || "（空白記錄）"}`);
       line.appendChild(text);
 
-      // 如果是偶數筆，加勾選框
       if (record.number % 2 === 0) {
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -103,9 +125,10 @@
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(" 是否量測"));
         line.appendChild(label);
+        document.getElementById("log-right").appendChild(line);
+      } else {
+        document.getElementById("log-left").appendChild(line);
       }
-
-      div.appendChild(line);
     }
 
     function downloadCSV() {
