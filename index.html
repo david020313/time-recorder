@@ -8,7 +8,7 @@
   <style>
     body {
       font-family: sans-serif;
-      padding: 30px;
+      padding: 20px; /* 減少頁面邊距 */
       margin: 0;
       text-align: center;
     }
@@ -17,20 +17,20 @@
       position: sticky;
       top: 0;
       background-color: white;
-      padding: 10px;
+      padding: 5px; /* 減少內邊距 */
       z-index: 100;
       border-bottom: 1px solid #ccc;
     }
 
     button {
-      font-size: 18px;
-      padding: 10px 20px;
-      margin: 10px;
+      font-size: 16px; /* 稍微縮小按鈕字體 */
+      padding: 8px 15px; /* 縮小按鈕內邊距 */
+      margin: 5px; /* 減少按鈕外邊距 */
       cursor: pointer;
     }
 
     #log-container {
-      margin-top: 30px;
+      margin-top: 20px;
       max-width: 1000px;
       margin-left: auto;
       margin-right: auto;
@@ -44,20 +44,31 @@
     .row {
       display: flex;
       gap: 0; /* 移除間隙 */
-      justify-content: space-between;
+      justify-content: flex-start; /* 改為靠左對齊，讓元素更靠近 */
       border-bottom: 1px solid #ddd;
-      padding: 6px 10px; /* 減少上下內距 */
+      padding: 5px 5px; /* 進一步減少上下內距 */
       box-sizing: border-box;
     }
 
     .cell {
-      flex: 1;
       text-align: left;
       white-space: pre-wrap;
       word-break: break-word;
       min-width: 0;
       margin: 0;
-      padding: 0 4px;
+      padding: 0;
+    }
+    
+    .cell:first-child {
+      flex: 0.4; /* 左側佔比更小 */
+      max-width: 40%;
+      padding-right: 0; /* 移除右內邊距 */
+    }
+    
+    .cell:last-child {
+      flex: 0.6; /* 右側佔比更大 */
+      max-width: 60%;
+      padding-left: 0; /* 移除左內邊距 */
     }
 
     .checkbox-label {
@@ -70,12 +81,13 @@
       transform: scale(1.2);
     }
     
-    /* 壓縮橫向間距 */
+    /* 修改文字和控件布局 */
     .flex-container {
       display: flex;
       align-items: center;
-      gap: 5px; /* 減少間距 */
+      gap: 1px; /* 進一步縮小間距 */
       flex-wrap: nowrap;
+      width: 100%;
     }
     
     /* 超過長度顯示省略號 */
@@ -83,13 +95,27 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      max-width: 42%; /* 稍微縮小時間文字寬度 */
     }
     
     /* 縮小備註欄寬度 */
     .remark-input {
-      flex: 1;
       min-width: 50px;
       font-size: 14px;
+      height: 20px; /* 減少高度 */
+      margin-left: 10px; /* 增加與量測框的間距 */
+      flex-grow: 1; /* 讓備註欄填滿剩餘空間 */
+    }
+    
+    .checkbox-label {
+      margin-left: 1px; /* 進一步縮小間距 */
+      font-size: 15px; /* 適當增大字體 */
+      white-space: nowrap; /* 防止折行 */
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.5); /* 增大複選框尺寸 */
+      margin: 0 2px; /* 縮小間距 */
     }
   </style>
 </head>
@@ -179,10 +205,17 @@
               timeText.className = "time-text";
               timeText.textContent = `${right.time ? "✔️" : "⚠️"} ${right.number}：${right.time || "（空白）"}`;
 
-              // checkbox
+              // checkbox - 移至時間文字後面緊接著
+              const checkboxWrapper = document.createElement("span");
+              checkboxWrapper.style.marginLeft = "2px"; // 縮小間距
+              checkboxWrapper.style.display = "inline-flex";
+              checkboxWrapper.style.alignItems = "center";
+              
               const checkbox = document.createElement("input");
               checkbox.type = "checkbox";
               checkbox.checked = right.measured === true;
+              checkbox.style.margin = "0 2px";
+              checkbox.style.transform = "scale(1.5)"; // 增大複選框尺寸
               checkbox.onchange = () => {
                   right.measured = checkbox.checked;
                   saveRecords();
@@ -192,6 +225,11 @@
               const checkboxLabel = document.createElement("label");
               checkboxLabel.className = "checkbox-label";
               checkboxLabel.textContent = "量測";
+              checkboxLabel.style.marginRight = "3px";
+              checkboxLabel.style.fontSize = "15px"; // 稍微增大字體
+              
+              checkboxWrapper.appendChild(checkbox);
+              checkboxWrapper.appendChild(checkboxLabel);
 
               // 備註欄
               const remarkInput = document.createElement("input");
@@ -206,8 +244,7 @@
 
               // 加入所有元件
               flexContainer.appendChild(timeText);
-              flexContainer.appendChild(checkbox);
-              flexContainer.appendChild(checkboxLabel);
+              flexContainer.appendChild(checkboxWrapper);
               flexContainer.appendChild(remarkInput);
 
               rightCell.appendChild(flexContainer);
