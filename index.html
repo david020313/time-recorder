@@ -30,34 +30,65 @@
     }
 
     #log-container {
-      display: flex;
-      justify-content: center;
       margin-top: 30px;
-      gap: 40px;
       max-width: 1000px;
       margin-left: auto;
       margin-right: auto;
-      overflow-x: hidden;
-    }
-
-    .column {
-      width: 45%;
-      text-align: left;
-      overflow-y: auto;
-      max-height: 600px;
       border: 1px solid #ccc;
       border-radius: 8px;
-      padding: 15px;
-      box-sizing: border-box;
       background-color: #f9f9f9;
+      max-height: 600px;
+      overflow-y: auto;
     }
 
-    .record-line {
-      margin-bottom: 12px;
+    .row {
+      display: flex;
+      gap: 0; /* 移除間隙 */
+      justify-content: space-between;
+      border-bottom: 1px solid #ddd;
+      padding: 6px 10px; /* 減少上下內距 */
+      box-sizing: border-box;
+    }
+
+    .cell {
+      flex: 1;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-width: 0;
+      margin: 0;
+      padding: 0 4px;
     }
 
     .checkbox-label {
-      margin-left: 10px;
+      margin-left: 5px; /* 稍微減少 */
+      font-size: 14px;
+    }
+
+    input[type="checkbox"] {
+      margin-left: 4px; /* 稍微減少 */
+      transform: scale(1.2);
+    }
+    
+    /* 壓縮橫向間距 */
+    .flex-container {
+      display: flex;
+      align-items: center;
+      gap: 5px; /* 減少間距 */
+      flex-wrap: nowrap;
+    }
+    
+    /* 超過長度顯示省略號 */
+    .time-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* 縮小備註欄寬度 */
+    .remark-input {
+      flex: 1;
+      min-width: 50px;
       font-size: 14px;
     }
   </style>
@@ -72,13 +103,10 @@
     <button onclick="clearAll()">清除所有記錄</button>
   </div>
 
-  <div id="log-container">
-    <div id="log-left" class="column"></div>
-    <div id="log-right" class="column"></div>
-  </div>
+  <div id="log-container"></div>
 
   <script>
-    const records = []; // 每筆記錄為 {number, time, measured}
+    const records = [];
     let count = 1;
 
     function getCurrentTime24hr() {
@@ -93,12 +121,20 @@
         hour12: false
       });
     }
+    
+    // 獲取CSV格式的時間字串 (強制文本格式)
+    function getTimeForCSV(timeStr) {
+      if (!timeStr) return "";
+      
+      // 在時間前添加空格，強制表格軟件以文本方式處理
+      return " " + timeStr;
+    }
 
     function recordTime() {
       const now = getCurrentTime24hr();
-      const record = { number: count, time: ` ${now}`, measured: null };
+      const record = { number: count, time: now, measured: null };
       records.push(record);
-      logRecord(record);
+      renderRecords();
       count++;
       saveRecords();
     }
@@ -106,59 +142,83 @@
     function recordEmpty() {
       const record = { number: count, time: "", measured: null };
       records.push(record);
-      logRecord(record);
+      renderRecords();
       count++;
       saveRecords();
     }
 
-    function logRecord(record) {
-      const line = document.createElement("div");
-      line.className = "record-line";
-      const text = document.createTextNode(`${record.time ? "✔️" : "⚠️"} 第 ${record.number} 筆：${record.time || "（空白記錄）"}`);
-      line.appendChild(text);
+    function renderRecords() {
+        const container = document.getElementById("log-container");
+        container.innerHTML = "";
 
-      if (record.number % 2 === 0) {
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = record.measured === true;
-        checkbox.onchange = () => {
-          record.measured = checkbox.checked;
-          saveRecords();
-        };
-        const label = document.createElement("label");
-        label.className = "checkbox-label";
-        label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(" 是否量測"));
-        line.appendChild(label);
-        document.getElementById("log-right").appendChild(line);
-      } else {
-        document.getElementById("log-left").appendChild(line);
-      }
-    }
+        for (let i = 0; i < records.length; i += 2) {
+            const left = records[i];
+            const right = records[i + 1];
 
-    function downloadCSV() {
-      if (records.length === 0) {
-        alert("目前尚未有任何記錄");
-        return;
-      }
+            const row = document.createElement("div");
+            row.className = "row";
 
-      const header = ["編號", "時間", "編號", "時間", "是否量測"];
-      const rows = [];
+            const leftCell = document.createElement("div");
+            leftCell.className = "cell";
+            
+            const leftText = document.createElement("span");
+            leftText.className = "time-text";
+            leftText.textContent = `${left.time ? "✔️" : "⚠️"} ${left.number}：${left.time || "（空白）"}`;
+            leftCell.appendChild(leftText);
 
-      for (let i = 0; i < records.length; i += 2) {
-        const left = records[i] || {};
-        const right = records[i + 1] || {};
-        rows.push([
-          left.number || "", left.time || "",
-          right.number || "", right.time || "",
-          right.hasOwnProperty("measured") ? (right.measured ? "是" : "否") : ""
-        ]);
-      }
+            const rightCell = document.createElement("div");
+            rightCell.className = "cell";
 
-      const csv = Papa.unparse({ fields: header, data: rows });
-      const utf8Bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-      const blob = new Blob([utf8Bom, csv], { type: "text/csv;charset=utf-8;" });
-      saveAs(blob, "time_records.csv");
+            if (right) {
+              // 建立右側橫向 flex 容器
+              const flexContainer = document.createElement("div");
+              flexContainer.className = "flex-container";
+
+              // 時間文字
+              const timeText = document.createElement("span");
+              timeText.className = "time-text";
+              timeText.textContent = `${right.time ? "✔️" : "⚠️"} ${right.number}：${right.time || "（空白）"}`;
+
+              // checkbox
+              const checkbox = document.createElement("input");
+              checkbox.type = "checkbox";
+              checkbox.checked = right.measured === true;
+              checkbox.onchange = () => {
+                  right.measured = checkbox.checked;
+                  saveRecords();
+              };
+
+              // label - 縮短標籤文字
+              const checkboxLabel = document.createElement("label");
+              checkboxLabel.className = "checkbox-label";
+              checkboxLabel.textContent = "量測";
+
+              // 備註欄
+              const remarkInput = document.createElement("input");
+              remarkInput.type = "text";
+              remarkInput.placeholder = "備註";
+              remarkInput.className = "remark-input";
+              remarkInput.value = right.remark || "";
+              remarkInput.oninput = () => {
+                  right.remark = remarkInput.value;
+                  saveRecords();
+              };
+
+              // 加入所有元件
+              flexContainer.appendChild(timeText);
+              flexContainer.appendChild(checkbox);
+              flexContainer.appendChild(checkboxLabel);
+              flexContainer.appendChild(remarkInput);
+
+              rightCell.appendChild(flexContainer);
+            }
+
+            row.appendChild(leftCell);
+            row.appendChild(rightCell);
+            container.appendChild(row);
+        }
+
+        container.scrollTop = container.scrollHeight;
     }
 
     function saveRecords() {
@@ -172,10 +232,8 @@
 
       if (saved) {
         const parsed = JSON.parse(saved);
-        parsed.forEach(record => {
-          records.push(record);
-          logRecord(record);
-        });
+        parsed.forEach(record => records.push(record));
+        renderRecords();
       }
 
       if (savedCount) {
@@ -189,14 +247,39 @@
         localStorage.removeItem("recordCount");
         records.length = 0;
         count = 1;
-        document.getElementById("log-left").innerHTML = "";
-        document.getElementById("log-right").innerHTML = "";
+        document.getElementById("log-container").innerHTML = "";
       }
     }
 
-    window.onload = () => {
-      loadRecords();
-    };
+    function downloadCSV() {
+        if (records.length === 0) {
+            alert("目前尚未有任何記錄");
+            return;
+        }
+
+        const header = ["編號", "時間", "編號", "時間", "是否量測", "備註"];
+        const rows = [];
+
+        for (let i = 0; i < records.length; i += 2) {
+            const left = records[i] || {};
+            const right = records[i + 1] || {};
+            rows.push([
+            left.number || "",
+            getTimeForCSV(left.time) || "",
+            right.number || "",
+            getTimeForCSV(right.time) || "",
+            right.hasOwnProperty("measured") ? (right.measured ? "是" : "否") : "",
+            right.remark || ""
+            ]);
+        }
+
+        const csv = Papa.unparse({ fields: header, data: rows });
+        const utf8Bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+        const blob = new Blob([utf8Bom, csv], { type: "text/csv;charset=utf-8;" });
+        saveAs(blob, "time_records.csv");
+    }
+
+    window.onload = loadRecords;
   </script>
 </body>
 </html>
