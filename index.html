@@ -125,6 +125,7 @@
   <div id="buttonBar">
     <button onclick="recordTime()">記錄現在時間</button>
     <button onclick="recordEmpty()">沒記錄到（留空）</button>
+    <button onclick="deleteLastRecord()">刪除最後一筆</button>
     <button onclick="downloadCSV()">下載CSV（一左一右）</button>
     <button onclick="clearAll()">清除所有記錄</button>
   </div>
@@ -314,6 +315,17 @@
         const utf8Bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
         const blob = new Blob([utf8Bom, csv], { type: "text/csv;charset=utf-8;" });
         saveAs(blob, "time_records.csv");
+    }
+
+    function deleteLastRecord() {
+      if (records.length > 0) {
+        records.pop();
+        if (count > 1) count--;
+        renderRecords();
+        saveRecords();
+      } else {
+        alert("沒有記錄可以刪除");
+      }
     }
 
     window.onload = loadRecords;
