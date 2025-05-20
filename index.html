@@ -136,6 +136,20 @@
     const records = [];
     let count = 1;
 
+    // 獲取當前最大量測編號
+    function getMaxMeasureNumber() {
+        let maxNumber = 0;
+        records.forEach(record => {
+            if (record.measureNumber) {
+                const num = parseInt(record.measureNumber);
+                if (!isNaN(num) && num > maxNumber) {
+                    maxNumber = num;
+                }
+            }
+        });
+        return maxNumber;
+    }
+
     function getCurrentTime24hr() {
       const now = new Date();
       return now.toLocaleString("zh-TW", {
@@ -197,58 +211,79 @@
             rightCell.className = "cell";
 
             if (right) {
-              // 建立右側橫向 flex 容器
-              const flexContainer = document.createElement("div");
-              flexContainer.className = "flex-container";
+                // 建立右側橫向 flex 容器
+                const flexContainer = document.createElement("div");
+                flexContainer.className = "flex-container";
 
-              // 時間文字
-              const timeText = document.createElement("span");
-              timeText.className = "time-text";
-              timeText.textContent = `${right.time ? "✔️" : "⚠️"} ${right.number}：${right.time || "（空白）"}`;
+                // 時間文字
+                const timeText = document.createElement("span");
+                timeText.className = "time-text";
+                timeText.textContent = `${right.time ? "✔️" : "⚠️"} ${right.number}：${right.time || "（空白）"}`;
 
-              // checkbox - 移至時間文字後面緊接著
-              const checkboxWrapper = document.createElement("span");
-              checkboxWrapper.style.marginLeft = "2px"; // 縮小間距
-              checkboxWrapper.style.display = "inline-flex";
-              checkboxWrapper.style.alignItems = "center";
-              
-              const checkbox = document.createElement("input");
-              checkbox.type = "checkbox";
-              checkbox.checked = right.measured === true;
-              checkbox.style.margin = "0 2px";
-              checkbox.style.transform = "scale(1.5)"; // 增大複選框尺寸
-              checkbox.onchange = () => {
-                  right.measured = checkbox.checked;
-                  saveRecords();
-              };
+                // checkbox - 移至時間文字後面緊接著
+                const checkboxWrapper = document.createElement("span");
+                checkboxWrapper.style.marginLeft = "2px"; // 縮小間距
+                checkboxWrapper.style.display = "inline-flex";
+                checkboxWrapper.style.alignItems = "center";
+                
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.checked = right.measured === true;
+                checkbox.style.margin = "0 2px";
+                checkbox.style.transform = "scale(1.5)"; // 增大複選框尺寸
+                checkbox.onchange = () => {
+                    right.measured = checkbox.checked;
+                    if (checkbox.checked && !right.measureNumber) {
+                        // 如果勾選且沒有編號，則自動填入下一個編號
+                        const maxNumber = getMaxMeasureNumber();
+                        right.measureNumber = (maxNumber + 1).toString();
+                        measureNumberInput.value = right.measureNumber;
+                    }
+                    saveRecords();
+                };
 
-              // label - 縮短標籤文字
-              const checkboxLabel = document.createElement("label");
-              checkboxLabel.className = "checkbox-label";
-              checkboxLabel.textContent = "量測";
-              checkboxLabel.style.marginRight = "3px";
-              checkboxLabel.style.fontSize = "15px"; // 稍微增大字體
-              
-              checkboxWrapper.appendChild(checkbox);
-              checkboxWrapper.appendChild(checkboxLabel);
+                // label - 縮短標籤文字
+                const checkboxLabel = document.createElement("label");
+                checkboxLabel.className = "checkbox-label";
+                checkboxLabel.textContent = "量測";
+                checkboxLabel.style.marginRight = "3px";
+                checkboxLabel.style.fontSize = "15px"; // 稍微增大字體
+                
+                checkboxWrapper.appendChild(checkbox);
+                checkboxWrapper.appendChild(checkboxLabel);
 
-              // 備註欄
-              const remarkInput = document.createElement("input");
-              remarkInput.type = "text";
-              remarkInput.placeholder = "備註";
-              remarkInput.className = "remark-input";
-              remarkInput.value = right.remark || "";
-              remarkInput.oninput = () => {
-                  right.remark = remarkInput.value;
-                  saveRecords();
-              };
+                // 量測編號輸入框
+                const measureNumberInput = document.createElement("input");
+                measureNumberInput.type = "text";
+                measureNumberInput.placeholder = "量測編號";
+                measureNumberInput.style.width = "60px";
+                measureNumberInput.style.marginLeft = "5px";
+                measureNumberInput.style.fontSize = "14px";
+                measureNumberInput.style.height = "20px";
+                measureNumberInput.value = right.measureNumber || "";
+                measureNumberInput.oninput = () => {
+                    right.measureNumber = measureNumberInput.value;
+                    saveRecords();
+                };
+                
+                // 備註欄
+                const remarkInput = document.createElement("input");
+                remarkInput.type = "text";
+                remarkInput.placeholder = "備註";
+                remarkInput.className = "remark-input";
+                remarkInput.value = right.remark || "";
+                remarkInput.oninput = () => {
+                    right.remark = remarkInput.value;
+                    saveRecords();
+                };
 
-              // 加入所有元件
-              flexContainer.appendChild(timeText);
-              flexContainer.appendChild(checkboxWrapper);
-              flexContainer.appendChild(remarkInput);
+                // 加入所有元件
+                flexContainer.appendChild(timeText);
+                flexContainer.appendChild(checkboxWrapper);
+                flexContainer.appendChild(measureNumberInput);
+                flexContainer.appendChild(remarkInput);
 
-              rightCell.appendChild(flexContainer);
+                rightCell.appendChild(flexContainer);
             }
 
             row.appendChild(leftCell);
@@ -260,23 +295,23 @@
     }
 
     function saveRecords() {
-      localStorage.setItem("timeRecords", JSON.stringify(records));
-      localStorage.setItem("recordCount", count);
+        localStorage.setItem("timeRecords", JSON.stringify(records));
+        localStorage.setItem("recordCount", count);
     }
 
     function loadRecords() {
-      const saved = localStorage.getItem("timeRecords");
-      const savedCount = localStorage.getItem("recordCount");
+        const saved = localStorage.getItem("timeRecords");
+        const savedCount = localStorage.getItem("recordCount");
 
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        parsed.forEach(record => records.push(record));
-        renderRecords();
-      }
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            parsed.forEach(record => records.push(record));
+            renderRecords();
+        }
 
-      if (savedCount) {
-        count = parseInt(savedCount);
-      }
+        if (savedCount) {
+            count = parseInt(savedCount);
+        }
     }
 
     function clearAll() {
@@ -295,7 +330,7 @@
             return;
         }
 
-        const header = ["編號", "時間", "編號", "時間", "是否量測", "備註"];
+        const header = ["編號", "時間", "編號", "時間", "是否量測", "量測編號", "備註"];
         const rows = [];
 
         for (let i = 0; i < records.length; i += 2) {
@@ -307,6 +342,7 @@
             right.number || "",
             getTimeForCSV(right.time) || "",
             right.hasOwnProperty("measured") ? (right.measured ? "是" : "否") : "",
+            right.measureNumber || "",
             right.remark || ""
             ]);
         }
