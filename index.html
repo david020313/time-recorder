@@ -2,13 +2,14 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>時間記錄器</title>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
-      padding: 20px; /* 減少頁面邊距 */
+      padding: 20px;
       margin: 0;
       text-align: center;
     }
@@ -17,15 +18,15 @@
       position: sticky;
       top: 0;
       background-color: white;
-      padding: 5px; /* 減少內邊距 */
+      padding: 5px;
       z-index: 100;
       border-bottom: 1px solid #ccc;
     }
 
     button {
-      font-size: 16px; /* 稍微縮小按鈕字體 */
-      padding: 8px 15px; /* 縮小按鈕內邊距 */
-      margin: 5px; /* 減少按鈕外邊距 */
+      font-size: 16px;
+      padding: 8px 15px;
+      margin: 5px;
       cursor: pointer;
     }
 
@@ -43,10 +44,10 @@
 
     .row {
       display: flex;
-      gap: 0; /* 移除間隙 */
-      justify-content: flex-start; /* 改為靠左對齊，讓元素更靠近 */
+      gap: 0;
+      justify-content: flex-start;
       border-bottom: 1px solid #ddd;
-      padding: 5px 5px; /* 進一步減少上下內距 */
+      padding: 5px 5px;
       box-sizing: border-box;
     }
 
@@ -60,62 +61,207 @@
     }
     
     .cell:first-child {
-      flex: 0.4; /* 左側佔比更小 */
+      flex: 0.4;
       max-width: 40%;
-      padding-right: 0; /* 移除右內邊距 */
+      padding-right: 0;
     }
     
     .cell:last-child {
-      flex: 0.6; /* 右側佔比更大 */
+      flex: 0.6;
       max-width: 60%;
-      padding-left: 0; /* 移除左內邊距 */
+      padding-left: 0;
     }
 
     .checkbox-label {
-      margin-left: 5px; /* 稍微減少 */
+      margin-left: 5px;
       font-size: 14px;
     }
 
     input[type="checkbox"] {
-      margin-left: 4px; /* 稍微減少 */
+      margin-left: 4px;
       transform: scale(1.2);
     }
     
-    /* 修改文字和控件布局 */
+    /* 修改文字和控件布局 - 全部橫向排列 */
     .flex-container {
       display: flex;
       align-items: center;
-      gap: 1px; /* 進一步縮小間距 */
+      gap: 3px;
       flex-wrap: nowrap;
       width: 100%;
     }
     
-    /* 超過長度顯示省略號 */
+    /* 時間文字容器 - 與控制項同行 */
     .time-text {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 100%; /* 稍微縮小時間文字寬度 */
+      flex: 1;
+      min-width: 0;
+    }
+    
+    /* 控制項容器 - 橫向排列 */
+    .controls-container {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      flex-wrap: nowrap;
+      flex-shrink: 0;
     }
     
     /* 縮小備註欄寬度 */
     .remark-input {
       min-width: 50px;
       font-size: 14px;
-      height: 20px; /* 減少高度 */
-      margin-left: 10px; /* 增加與量測框的間距 */
-      flex-grow: 1; /* 讓備註欄填滿剩餘空間 */
+      height: 20px;
+      margin-left: 5px;
+      flex-grow: 1;
     }
     
     .checkbox-label {
-      margin-left: 1px; /* 進一步縮小間距 */
-      font-size: 15px; /* 適當增大字體 */
-      white-space: nowrap; /* 防止折行 */
+      margin-left: 1px;
+      font-size: 15px;
+      white-space: nowrap;
     }
 
     input[type="checkbox"] {
-      transform: scale(1.5); /* 增大複選框尺寸 */
-      margin: 0 2px; /* 縮小間距 */
+      transform: scale(1.5);
+      margin: 0 2px;
+    }
+
+    /* 量測編號輸入框 */
+    .measure-number-input {
+      width: 60px;
+      margin-left: 5px;
+      font-size: 14px;
+      height: 20px;
+    }
+
+    /* 手機端響應式設計 - 保持左右佈局 */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      button {
+        font-size: 14px;
+        padding: 6px 12px;
+        margin: 3px;
+      }
+      
+      .row {
+        /* 保持橫向排列，但增加間距 */
+        gap: 5px;
+        padding: 8px 3px;
+      }
+      
+      .cell:first-child {
+        flex: 0.45;
+        max-width: 45%;
+        font-size: 14px;
+      }
+      
+      .cell:last-child {
+        flex: 0.55;
+        max-width: 55%;
+      }
+      
+      .flex-container {
+        gap: 2px;
+      }
+      
+      .time-text {
+        flex: 1;
+        font-size: 14px;
+        line-height: 1.2;
+        min-width: 0;
+      }
+      
+      .controls-container {
+        flex-direction: row;
+        align-items: center;
+        gap: 2px;
+        flex-wrap: nowrap;
+        flex-shrink: 0;
+      }
+      
+      .checkbox-wrapper {
+        align-self: center;
+        flex-shrink: 0;
+      }
+      
+      .checkbox-label {
+        font-size: 13px;
+      }
+      
+      .measure-number-input {
+        width: 40px;
+        margin-left: 0;
+        font-size: 12px;
+        height: 22px;
+        flex-shrink: 0;
+      }
+      
+      .remark-input {
+        margin-left: 0;
+        width: 60px;
+        min-width: 40px;
+        font-size: 12px;
+        height: 22px;
+        flex-shrink: 0;
+      }
+    }
+
+    /* 超小螢幕優化 - 保持左右佈局 */
+    @media (max-width: 480px) {
+      .row {
+        gap: 2px;
+        padding: 6px 2px;
+      }
+      
+      .cell:first-child {
+        flex: 0.4;
+        max-width: 40%;
+        font-size: 13px;
+      }
+      
+      .cell:last-child {
+        flex: 0.6;
+        max-width: 60%;
+      }
+      
+      .time-text {
+        font-size: 13px;
+        line-height: 1.1;
+      }
+      
+      .controls-container {
+        gap: 2px;
+        flex-wrap: nowrap;
+      }
+      
+      .checkbox-label {
+        font-size: 12px;
+      }
+      
+      input[type="checkbox"] {
+        transform: scale(1.3);
+      }
+      
+      .measure-number-input {
+        width: 35px;
+        font-size: 11px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+      
+      .remark-input {
+        font-size: 11px;
+        height: 20px;
+        width: 50px;
+        min-width: 30px;
+        flex-shrink: 0;
+      }
     }
   </style>
 </head>
@@ -211,18 +357,22 @@
             rightCell.className = "cell";
 
             if (right) {
-                // 建立右側橫向 flex 容器
+                // 建立右側 flex 容器 - 全部橫向排列
                 const flexContainer = document.createElement("div");
                 flexContainer.className = "flex-container";
 
-                // 時間文字
+                // 時間文字 - 與控制項同行
                 const timeText = document.createElement("span");
                 timeText.className = "time-text";
                 timeText.textContent = `${right.time ? "✔️" : "⚠️"} ${right.number}：${right.time || "（空白）"}`;
 
-                // checkbox - 移至時間文字後面緊接著
+                // 控制項容器
+                const controlsContainer = document.createElement("div");
+                controlsContainer.className = "controls-container";
+
+                // checkbox wrapper
                 const checkboxWrapper = document.createElement("span");
-                checkboxWrapper.style.marginLeft = "2px"; // 縮小間距
+                checkboxWrapper.className = "checkbox-wrapper";
                 checkboxWrapper.style.display = "inline-flex";
                 checkboxWrapper.style.alignItems = "center";
                 
@@ -230,11 +380,10 @@
                 checkbox.type = "checkbox";
                 checkbox.checked = right.measured === true;
                 checkbox.style.margin = "0 2px";
-                checkbox.style.transform = "scale(1.5)"; // 增大複選框尺寸
+                checkbox.style.transform = "scale(1.5)";
                 checkbox.onchange = () => {
                     right.measured = checkbox.checked;
                     if (checkbox.checked && !right.measureNumber) {
-                        // 如果勾選且沒有編號，則自動填入下一個編號
                         const maxNumber = getMaxMeasureNumber();
                         right.measureNumber = (maxNumber + 1).toString();
                         measureNumberInput.value = right.measureNumber;
@@ -242,12 +391,9 @@
                     saveRecords();
                 };
 
-                // label - 縮短標籤文字
                 const checkboxLabel = document.createElement("label");
                 checkboxLabel.className = "checkbox-label";
                 checkboxLabel.textContent = "量測";
-                checkboxLabel.style.marginRight = "3px";
-                checkboxLabel.style.fontSize = "15px"; // 稍微增大字體
                 
                 checkboxWrapper.appendChild(checkbox);
                 checkboxWrapper.appendChild(checkboxLabel);
@@ -256,10 +402,7 @@
                 const measureNumberInput = document.createElement("input");
                 measureNumberInput.type = "text";
                 measureNumberInput.placeholder = "量測編號";
-                measureNumberInput.style.width = "60px";
-                measureNumberInput.style.marginLeft = "5px";
-                measureNumberInput.style.fontSize = "14px";
-                measureNumberInput.style.height = "20px";
+                measureNumberInput.className = "measure-number-input";
                 measureNumberInput.value = right.measureNumber || "";
                 measureNumberInput.oninput = () => {
                     right.measureNumber = measureNumberInput.value;
@@ -277,12 +420,13 @@
                     saveRecords();
                 };
 
-                // 加入所有元件
+                // 組裝元件
+                controlsContainer.appendChild(checkboxWrapper);
+                controlsContainer.appendChild(measureNumberInput);
+                controlsContainer.appendChild(remarkInput);
+                
                 flexContainer.appendChild(timeText);
-                flexContainer.appendChild(checkboxWrapper);
-                flexContainer.appendChild(measureNumberInput);
-                flexContainer.appendChild(remarkInput);
-
+                flexContainer.appendChild(controlsContainer);
                 rightCell.appendChild(flexContainer);
             }
 
@@ -295,29 +439,17 @@
     }
 
     function saveRecords() {
-        localStorage.setItem("timeRecords", JSON.stringify(records));
-        localStorage.setItem("recordCount", count);
+        // 使用內存存儲替代 localStorage
+        // 注意：頁面重新載入後數據會丟失
     }
 
     function loadRecords() {
-        const saved = localStorage.getItem("timeRecords");
-        const savedCount = localStorage.getItem("recordCount");
-
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            parsed.forEach(record => records.push(record));
-            renderRecords();
-        }
-
-        if (savedCount) {
-            count = parseInt(savedCount);
-        }
+        // 由於不使用 localStorage，這裡不載入數據
+        // 如需持久化存儲，建議在自己的環境中使用
     }
 
     function clearAll() {
       if (confirm("確定要清除所有記錄嗎？此操作無法還原。")) {
-        localStorage.removeItem("timeRecords");
-        localStorage.removeItem("recordCount");
         records.length = 0;
         count = 1;
         document.getElementById("log-container").innerHTML = "";
